@@ -6,6 +6,7 @@
 package com.pramesh.binarysearch;
 
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 /**
  *
@@ -45,7 +46,7 @@ public class BinaryTree {
             }
         };
     }
-    
+
     private BiConsumer<Node, Node> pushNode() {
         return (focusNode, newNode) -> {
             if (newNode.key < focusNode.key) {
@@ -54,6 +55,63 @@ public class BinaryTree {
                 pushNodeToRight().accept(focusNode, newNode);
             }
         };
+    }
+
+    private Supplier<Node> findNode(int key, Node focusNode) {
+        return () -> {
+            if (key == focusNode.key) {
+                return focusNode;
+            } else if (key < focusNode.key) {
+                return findNode(key, focusNode.leftChild).get();
+            } else if (key > focusNode.key) {
+                return findNode(key, focusNode.rightChild).get();
+            } else {
+                return null;
+            }
+        };
+    }
+
+    private static Supplier<Node> smallerChild(Node focusNode) {
+        return () -> {
+            if (focusNode.leftChild == null) {
+                return focusNode;
+            }
+            return smallerChild(focusNode.leftChild).get();
+        };
+    }
+
+    public static Node deleteNode(Node root, int value) {
+        if (root == null) {
+            return null;
+        }
+        if (root.key > value) {
+            root.leftChild = deleteNode(root.leftChild, value);
+        } else if (root.key < value) {
+            root.rightChild = deleteNode(root.rightChild, value);
+
+        } else {
+            // if nodeToBeDeleted have both children
+            if (root.leftChild != null && root.rightChild != null) {
+                Node temp = root;
+                // Finding minimum element from right
+                Node minNodeForRight = smallerChild(temp.rightChild).get();
+                // Replacing current node with minimum node from right subtree
+                root = minNodeForRight;
+                // Deleting minimum node from right now
+                deleteNode(root.rightChild, minNodeForRight.key);
+
+            } // if nodeToBeDeleted has only left child
+            else if (root.leftChild != null) {
+                root = root.leftChild;
+            } // if nodeToBeDeleted has only right child
+            else if (root.rightChild != null) {
+                root = root.rightChild;
+            } // if nodeToBeDeleted do not have child (Leaf node)
+            else {
+                root = null;
+            }
+        }
+        return root;
     }
 
     public static void main(String[] args) {
@@ -79,15 +137,28 @@ public class BinaryTree {
         System.out.println("------IN ORDER TRAVERSE------");
         System.out.println("-----------------------------");
         Traversal.inOrderTraversTree().accept(theTree.root);
+//
+//        System.out.println("-----------------------------");
+//        System.out.println("------PRE ORDER TRAVERSE------");
+//        System.out.println("-----------------------------");
+//        Traversal.preOrderTraverseTree().accept(theTree.root);
+//
+//        System.out.println("-----------------------------");
+//        System.out.println("------POST ORDER TRAVERSE------");
+//        System.out.println("-----------------------------");
+//        Traversal.postOrderTraverseTree().accept(theTree.root);
+
+//        System.out.println("-----------------------------");
+//        System.out.println("----Node with the key 75-----");
+//        System.out.println(theTree.findNode(75, theTree.root).get());
+//        System.out.println("-----------------------------");
+
+        System.out.println("removing node 75");
+        BinaryTree.deleteNode(theTree.root, 50);
 
         System.out.println("-----------------------------");
-        System.out.println("------PRE ORDER TRAVERSE------");
+        System.out.println("------IN ORDER TRAVERSE------");
         System.out.println("-----------------------------");
-        Traversal.preOrderTraverseTree().accept(theTree.root);
-
-        System.out.println("-----------------------------");
-        System.out.println("------POST ORDER TRAVERSE------");
-        System.out.println("-----------------------------");
-        Traversal.postOrderTraverseTree().accept(theTree.root);
+        Traversal.inOrderTraversTree().accept(theTree.root);
     }
 }
